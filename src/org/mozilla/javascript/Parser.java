@@ -150,11 +150,22 @@ public class Parser
     {
         int tt = currentFlaggedToken;
         if (tt == Token.EOF) {
-            tt = ts.getToken();
+            while ((tt = ts.getToken()) == Token.CONDCOMMENT || tt == Token.KEEPCOMMENT) {
+                if (tt == Token.CONDCOMMENT) {
+                    decompiler.addJScriptConditionalComment(ts.getString());
+                } else if (tt == Token.KEEPCOMMENT) {
+                    decompiler.addPreservedComment(ts.getString());
+                }
+            }
             if (tt == Token.EOL) {
                 do {
                     tt = ts.getToken();
-                } while (tt == Token.EOL);
+                    if (tt == Token.CONDCOMMENT) {
+                        decompiler.addJScriptConditionalComment(ts.getString());
+                    } else if (tt == Token.KEEPCOMMENT) {
+                        decompiler.addPreservedComment(ts.getString());
+                    }
+                } while (tt == Token.EOL || tt == Token.CONDCOMMENT || tt == Token.KEEPCOMMENT);
                 tt |= TI_AFTER_EOL;
             }
             currentFlaggedToken = tt;
